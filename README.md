@@ -55,6 +55,8 @@ conda activate kpsfr
 4. Download [TS-WorldCup](https://cgv.cs.nthu.edu.tw/KpSFR_data/TS-WorldCup.zip) dataset.
 5. Now the WorldCup dataset would place in [dataset/soccer_worldcup_2014](dataset/soccer_worldcup_2014) and TS-WorldCup in [dataset/WorldCup_2014_2018](dataset/WorldCup_2014_2018).
 
+> **Note:** With the current setup all you ned is the `WorldCup_2014_2018` dataset and [pretrained weight on WorldCup dataset](https://cgv.cs.nthu.edu.tw/KpSFR_data/model/kpsfr.pth). Once you get those you can just run the inference command below with the `inference.txt` file without changing anything.
+
 ## Inference
 
 Please use [robust](robust) model first to get the preprocess results before running the inference command below.
