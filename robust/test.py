@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import utils
 import metrics
 import skimage.segmentation as ss
+import matplotlib.pyplot as plt
 
 
 # Get input arguments
@@ -90,6 +91,9 @@ def calc_keypts_metrics(gt_cls_dict, pred_cls_dict, pr_thres):
     num_both_keypts_appear = 0
     tp = 0
     mse_loss = 0.0
+
+    print("gt", gt_cls_dict)
+    print("pred", pred_cls_dict)
 
     for (gk, gv), (pk, pv) in zip(gt_cls_dict.items(), pred_cls_dict.items()):
         if gv:
@@ -165,6 +169,7 @@ def test():
             num_workers=4,
         )
 
+
     # Loss function
     class_weights = torch.ones(num_classes) * 100
     class_weights[0] = 1
@@ -238,7 +243,12 @@ def test():
 
     with torch.no_grad():
         for step, (image, gt_heatmap, target, gt_homo) in test_progress_bar:
+            
+            plt.imshow(np.transpose(image.numpy().squeeze(), axes=[1, 2, 0]))
+            plt.show()
+
             image = image.to(device)
+            
             gt_heatmap = gt_heatmap.to(device).long()
 
             pred_heatmap = model(image)
@@ -253,6 +263,11 @@ def test():
             gt_heatmap = gt_heatmap[0].cpu().numpy()
             target = target[0].cpu().numpy()
             gt_homo = gt_homo[0].cpu().numpy()
+
+            print("heatmap", pred_heatmap)
+            
+            plt.imshow(pred_heatmap)
+            plt.show()
 
             gt_cls_dict, pred_cls_dict = postprocessing(
                 scores, pred_heatmap, target, num_classes, opt.nms_thres)

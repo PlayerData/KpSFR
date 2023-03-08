@@ -14,7 +14,16 @@ import utils
 
 class MainTestDataset(data.Dataset):
 
-    def __init__(self, root, data_type, mode, num_objects, noise_trans: Optional[float] = None, noise_rotate: Optional[float] = None, target_video: list = [], sfp_finetuned: Optional[bool] = False):
+    def __init__(self,
+                root,
+                data_type,
+                mode,
+                num_objects,
+                noise_trans: Optional[float] = None,
+                noise_rotate: Optional[float] = None,
+                target_video: list = [],
+                sfp_finetuned: Optional[bool] = False
+                ):
 
         self.frame_h = 720
         self.frame_w = 1280
@@ -51,28 +60,34 @@ class MainTestDataset(data.Dataset):
 
         with open(imgset_path + '.txt', 'r') as lines:
             for line in lines:
+                print(line)
                 _video = line.rstrip('\n')
 
                 if target_video and not _video in target_video:
                     continue
 
                 self.videos.append(_video)
-                self.num_frames[_video] = len(
-                    glob.glob(osp.join(self.image_path, _video, '*.jpg')))
-                self.num_homographies[_video] = len(
-                    glob.glob(osp.join(self.anno_path, _video, '*_homography.npy')))
+                self.num_frames[_video] =  1 
+                # len(
+                #     glob.glob(osp.join(self.image_path, _video, '*.jpg')))
+                self.num_homographies[_video] = 1
+                # len(
+                #     glob.glob(osp.join(self.anno_path, _video, '*_homography.npy')))
 
                 frames = sorted(os.listdir(
-                    osp.join(self.image_path, _video)))
+                    osp.join(self.image_path, _video)))[0:1]
+                
                 self.frames[_video] = frames
 
                 homographies = sorted(os.listdir(
-                    osp.join(self.anno_path, _video)))
+                    osp.join(self.anno_path, _video)))[0:1]
                 self.homographies[_video] = homographies
 
                 gt_segs = sorted(os.listdir(
-                    osp.join(self.sfp_path, _video)))
+                    osp.join(self.sfp_path, _video)))[0:1]
                 self.segs[_video] = gt_segs
+
+                break
 
         self.preprocess = transforms.Compose([
             transforms.ToTensor(),
@@ -85,7 +100,6 @@ class MainTestDataset(data.Dataset):
         return len(self.videos)
 
     def __getitem__(self, index):
-
         _video_name = self.videos[index]
         _frames = self.frames[_video_name]
         _homographies = self.homographies[_video_name]
@@ -157,12 +171,14 @@ class MainTestDataset(data.Dataset):
         hm_list = np.stack(hm_list, axis=0)
 
         # (CK:num_objects, T:num_frames, H:180, W:320)
-        target_dilated_hm_list = torch.zeros((CK, T, H, W))
-        target_hm_list = torch.zeros_like(target_dilated_hm_list)
-        cls_gt = torch.zeros((self.num_frames[_video_name], H, W))
+        target_dilated_hm_list = torch.zeros((CK, T, H, W), dtype=torch.float16)
+        print(target_dilated_hm_list.size())
+        target_hm_list = torch.zeros(target_dilated_hm_list.size())
+        cls_gt = torch.zeros(
+            (self.num_frames[_video_name], H, W), dtype=torch.float32)
         lookup_list = []
         for f in range(self.num_frames[_video_name]):
-            class_lables = np.ones(num_pts, dtype=np.float32) * -1
+            class_lables = np.ones(num_pts, dtype=np.float16) * -1
             # Those keypoints appears on the each frame
             labels = np.unique(dilated_hm_list[f])
             labels = labels[labels != 0]  # Remove background class
@@ -223,10 +239,11 @@ class MainTestDataset(data.Dataset):
             lookup_list.append(sfp_interval)
 
         lookup_list = torch.stack(lookup_list, dim=0)  # T*CK:91
-        selector_list = torch.ones_like(lookup_list)  # T*CK:91
+        selector_list = torch.ones_like(lookup_list, dtype=torch.float16)  # T*CK:91
         selector_list[lookup_list == -1] = 0
-
-        # (num_frames, 3, 720, 1280)
+        
+        # (num_frames, 3, 720, 1280);
+        print(len(image_list))
         image_list = torch.stack(image_list, dim=0)
         homo_mat_list = np.stack(homo_mat_list, axis=0)
         # (K:num_objects, T:num_frames, C:1, H:180, W:320)

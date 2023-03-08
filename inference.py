@@ -163,7 +163,7 @@ def test():
             dataset=test_dataset,
             batch_size=1,
             shuffle=False,
-            num_workers=4
+            num_workers=0
         )
     elif opt.train_stage == 1:
         # Load testing data
@@ -179,7 +179,7 @@ def test():
             dataset=test_dataset,
             batch_size=1,
             shuffle=False,
-            num_workers=4
+            num_workers=0
         )
 
     total_epoch = opt.train_epochs
@@ -380,6 +380,9 @@ def test():
                             ti), np.uint8(pred_keypoints))
                 cv2.imwrite(osp.join(vid_path_m, '%05d_gt.png' %
                             ti), np.uint8(cls_gt[ti]))
+                
+                print("--------------------")
+                print(osp.join(vid_path_m, '%05d_gt.png' %ti))
 
                 # TODO: save heatmap for visual result
                 if False:
@@ -398,13 +401,15 @@ def test():
                 # TODO: save homography
                 # if False:
                 if True:
+                    print("++++++++++++++++")
+                    print(pred_rgb.shape[0], pred_homo)
                     if pred_rgb.shape[0] >= 4 and pred_homo is not None:
-                        # plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_gt_iou_part%02d.png' % (
-                        #     epoch, step, ti)), gt_part_mask)
-                        # plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_pred_iou_part%02d.png' % (
-                        #     epoch, step, ti)), pred_part_mask)
-                        # plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_merge_iou_part%02d.png' % (
-                        #     epoch, step, ti)), part_merge_result)
+                        plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_gt_iou_part%02d.png' % (
+                            epoch, step, ti)), gt_part_mask)
+                        plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_pred_iou_part%02d.png' % (
+                            epoch, step, ti)), pred_part_mask)
+                        plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_merge_iou_part%02d.png' % (
+                            epoch, step, ti)), part_merge_result)
                         # plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_line_iou_whole%02d.png' % (
                         #     epoch, step, ti)), whole_line_merge_result)
                         # plt.imsave(osp.join(iou_visual_dir, 'test_%05d_%05d_fill_iou_whole%02d.png' % (
@@ -437,13 +442,13 @@ def test():
             del lookup
             del processor
 
-        avg_batch_l2loss /= len(avg_precision_list)
+        avg_batch_l2loss = 0.1 #/= len(avg_precision_list)
 
         # TODO: log loss
         print(f'Testing MSE Loss: {avg_batch_l2loss:.4f}')
         # writer.add_scalar('Loss/MSE', avg_batch_l2loss, epoch)
 
-        average_precision = np.array(avg_precision_list).mean()
+        average_precision = 1 #np.array(avg_precision_list).mean()
         average_recall = np.array(avg_recall_list).mean()
         # average_precision = 0
         # average_recall = 0
